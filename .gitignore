@@ -36,3 +36,6 @@
 *.project
 *.classpath
 *.settings
+*.DS_Store
+*.recommenders
+/RemoteSystemsTempFiles/
