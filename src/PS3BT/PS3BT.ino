@@ -18,6 +18,7 @@ Servo motor;
 Servo motor2;
 Servo motor3;
 Servo motor4;
+int currentSpeed;
 
 int val;
 
@@ -36,9 +37,11 @@ void setup() {
 
 
   motor.attach(5);
-  motor2.attach(3);
+  motor2.attach(2);
   motor3.attach(7);
-  motor4.attach(9);
+  motor4.attach(3);
+
+  currentSpeed = 1100;
 
   
 
@@ -47,12 +50,7 @@ void setup() {
   motor3.writeMicroseconds(1060);
   motor4.writeMicroseconds(1060);
 
-  //delay(100);
 
-//  //myMotor.writeMicroseconds(1440);
-//  myMotor2.writeMicroseconds(1860);
-//  //myMotor3.writeMicroseconds(1440);
-//  //myMotor4.writeMicroseconds(1440);
 
   
 }
@@ -63,36 +61,46 @@ void loop() {
 
 
 
-  int currentSpeed = 1400;
-
   
-  //motor.writeMicroseconds(currentSpeed);
-  //motor2.writeMicroseconds(currentSpeed);
-  //motor3.writeMicroseconds(currentSpeed);
-  //motor4.writeMicroseconds(currentSpeed);
+
   
     
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
     if (PS3.getAnalogButton(R2)) {  
       Serial.print(F("\r\nR2: "));
       Serial.print(PS3.getAnalogButton(R2));
+      Serial.print(F("\r\nSpeed: "));
+      Serial.print(currentSpeed);
 
+        currentSpeed += 5;
       //increaseMotorSpeed(currentSpeed);
-       motor.writeMicroseconds(1440);
-  motor2.writeMicroseconds(1440);
-  motor3.writeMicroseconds(1440);
-  motor4.writeMicroseconds(1440);
+        motor.writeMicroseconds(currentSpeed);
+        motor2.writeMicroseconds(currentSpeed);
+        motor3.writeMicroseconds(currentSpeed);
+        motor4.writeMicroseconds(currentSpeed);
     }
 
     if (PS3.getAnalogButton(L2)) {
       Serial.print(F("\r\nL2: "));
       Serial.print(PS3.getAnalogButton(L2));
+            Serial.print(F("\r\nSpeed: "));
+      Serial.print(currentSpeed);
 
-      //decreaseMotorSpeed(currentSpeed);
-       motor.writeMicroseconds(1060);
-       motor2.writeMicroseconds(1060);
-        motor3.writeMicroseconds(1060);
-    motor4.writeMicroseconds(1060);
+        currentSpeed -= 5;
+
+        motor.writeMicroseconds(currentSpeed);
+        motor2.writeMicroseconds(currentSpeed);
+        motor3.writeMicroseconds(currentSpeed);
+        motor4.writeMicroseconds(currentSpeed);
+    }
+
+    if (PS3.getAnalogButton(L1)) {
+        currentSpeed = 1060;
+
+        motor.writeMicroseconds(currentSpeed);
+        motor2.writeMicroseconds(currentSpeed);
+        motor3.writeMicroseconds(currentSpeed);
+        motor4.writeMicroseconds(currentSpeed);
     }
     
     if (PS3.getButtonClick(PS)) {
