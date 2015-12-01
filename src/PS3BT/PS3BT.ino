@@ -37,8 +37,8 @@ void setup() {
 
 
   motor.attach(5);
-  motor2.attach(2);
-  motor3.attach(7);
+  motor2.attach(7);
+  motor3.attach(6);
   motor4.attach(3);
 
   currentSpeed = 1100;
@@ -54,16 +54,20 @@ void setup() {
 
   
 }
+// 1% = 1127, 100% = 1860
+void writeMotorSpeed(int newSpeed) {
+  currentSpeed = newSpeed;
+
+  motor.writeMicroseconds(currentSpeed);
+  motor2.writeMicroseconds(currentSpeed);
+  motor3.writeMicroseconds(currentSpeed);
+  motor4.writeMicroseconds(currentSpeed);
+}
 
 
 void loop() {
   Usb.Task();
 
-
-
-  
-
-  
     
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
     if (PS3.getAnalogButton(R2)) {  
@@ -72,35 +76,23 @@ void loop() {
       Serial.print(F("\r\nSpeed: "));
       Serial.print(currentSpeed);
 
-        currentSpeed += 5;
-      //increaseMotorSpeed(currentSpeed);
-        motor.writeMicroseconds(currentSpeed);
-        motor2.writeMicroseconds(currentSpeed);
-        motor3.writeMicroseconds(currentSpeed);
-        motor4.writeMicroseconds(currentSpeed);
+      writeMotorSpeed(currentSpeed + 5);
     }
 
     if (PS3.getAnalogButton(L2)) {
       Serial.print(F("\r\nL2: "));
       Serial.print(PS3.getAnalogButton(L2));
-            Serial.print(F("\r\nSpeed: "));
+      Serial.print(F("\r\nSpeed: "));
       Serial.print(currentSpeed);
 
-        currentSpeed -= 5;
 
-        motor.writeMicroseconds(currentSpeed);
-        motor2.writeMicroseconds(currentSpeed);
-        motor3.writeMicroseconds(currentSpeed);
-        motor4.writeMicroseconds(currentSpeed);
+        writeMotorSpeed(currentSpeed - 5);
     }
+    
 
     if (PS3.getAnalogButton(L1)) {
-        currentSpeed = 1060;
 
-        motor.writeMicroseconds(currentSpeed);
-        motor2.writeMicroseconds(currentSpeed);
-        motor3.writeMicroseconds(currentSpeed);
-        motor4.writeMicroseconds(currentSpeed);
+        writeMotorSpeed(1060);
     }
     
     if (PS3.getButtonClick(PS)) {
