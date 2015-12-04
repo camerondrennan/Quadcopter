@@ -18,10 +18,12 @@ Servo motor;
 Servo motor2;
 Servo motor3;
 Servo motor4;
-int currentSpeed;
 
-int val;
 
+int motor1Speed;
+int motor2Speed;
+int motor3Speed;
+int motor4Speed;
 
 
 void setup() {
@@ -41,7 +43,12 @@ void setup() {
   motor3.attach(6);
   motor4.attach(3);
 
-  currentSpeed = 1100;
+  
+  
+  motor1Speed = 1100;
+  motor2Speed = 1100;
+  motor3Speed = 1100;
+  motor4Speed = 1100;
 
   
 
@@ -55,13 +62,12 @@ void setup() {
   
 }
 // 1% = 1127, 100% = 1860
-void writeMotorSpeed(int newSpeed) {
-  currentSpeed = newSpeed;
-
-  motor.writeMicroseconds(currentSpeed);
-  motor2.writeMicroseconds(currentSpeed);
-  motor3.writeMicroseconds(currentSpeed);
-  motor4.writeMicroseconds(currentSpeed);
+void writeMotorSpeed() {
+  
+  motor.writeMicroseconds(motor1Speed);
+  motor2.writeMicroseconds(motor2Speed);
+  motor3.writeMicroseconds(motor3Speed);
+  motor4.writeMicroseconds(motor4Speed);
 }
 
 
@@ -74,30 +80,63 @@ void loop() {
       Serial.print(F("\r\nR2: "));
       Serial.print(PS3.getAnalogButton(R2));
       Serial.print(F("\r\nSpeed: "));
-      Serial.print(currentSpeed);
+      Serial.print(motor1Speed);
 
-      writeMotorSpeed(currentSpeed + 5);
+        motor1Speed += 5;
+        motor2Speed += 5;
+        motor3Speed += 5;
+        motor4Speed += 5;
+      writeMotorSpeed();
     }
 
     if (PS3.getAnalogButton(L2)) {
       Serial.print(F("\r\nL2: "));
       Serial.print(PS3.getAnalogButton(L2));
       Serial.print(F("\r\nSpeed: "));
-      Serial.print(currentSpeed);
+      Serial.print(motor1Speed);
 
 
-        writeMotorSpeed(currentSpeed - 5);
+        motor1Speed -= 5;
+        motor2Speed -= 5;
+        motor3Speed -= 5;
+        motor4Speed -= 5;
+        writeMotorSpeed();
     }
     
 
     if (PS3.getAnalogButton(L1)) {
+      // Should kill the motors
 
-        writeMotorSpeed(1060);
+        motor1Speed = 1120;
+        motor2Speed = 1120;
+        motor3Speed = 1120;
+        motor4Speed = 1120;
+        writeMotorSpeed();
     }
     
     if (PS3.getButtonClick(PS)) {
       Serial.print(F("\r\nPS"));
       PS3.disconnect();
     }
+
+    if (PS3.getButtonClick(UP)) {
+      motor1Speed += 5;
+      writeMotorSpeed();
+    }
+
+    if (PS3.getButtonClick(DOWN)) {
+      motor2Speed += 5;
+      writeMotorSpeed();
+    }
+
+    if (PS3.getButtonClick(LEFT)) {
+      motor3Speed += 5;
+      writeMotorSpeed();
+    }
+    if (PS3.getButtonClick(RIGHT)) {
+      motor4Speed += 5;
+      writeMotorSpeed();
+    }
+    
   }
 }
