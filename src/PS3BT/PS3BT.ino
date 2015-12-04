@@ -77,6 +77,8 @@ void loop() {
 
   writeMotorSpeed();
 
+
+
     
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
     if (PS3.getAnalogButton(R2)) {  
@@ -131,7 +133,7 @@ void loop() {
       motor2Speed -= yawAmount;
     }
 
-    if (PS3.getButtonClick(TRIANGLE)) {
+    if (PS3.getButtonClick(START)) {
         // Should kill the motors
         motor1Speed = 1120;
         motor2Speed = 1120;
@@ -160,5 +162,12 @@ void loop() {
       motor4Speed += 5;
     }
     
+  }
+  else {
+      // Fail safe if the controller disconnects?
+  motor1Speed = 1120;
+  motor2Speed = 1120;
+  motor3Speed = 1120;
+  motor4Speed = 1120;
   }
 }
