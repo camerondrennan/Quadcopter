@@ -13,7 +13,8 @@ USB Usb;
 BTD Btd(&Usb); 
 PS3BT PS3(&Btd); 
 
-
+// 1 + 2 = CCW
+// 3 + 4 = CW
 Servo motor;
 Servo motor2;
 Servo motor3;
@@ -74,6 +75,8 @@ void writeMotorSpeed() {
 void loop() {
   Usb.Task();
 
+  writeMotorSpeed();
+
     
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
     if (PS3.getAnalogButton(R2)) {  
@@ -86,7 +89,7 @@ void loop() {
         motor2Speed += 5;
         motor3Speed += 5;
         motor4Speed += 5;
-      writeMotorSpeed();
+        //writeMotorSpeed();
     }
 
     if (PS3.getAnalogButton(L2)) {
@@ -100,18 +103,41 @@ void loop() {
         motor2Speed -= 5;
         motor3Speed -= 5;
         motor4Speed -= 5;
-        writeMotorSpeed();
+        //writeMotorSpeed();
     }
     
 
+    int yawAmount = 2;
     if (PS3.getAnalogButton(L1)) {
-      // Should kill the motors
+      Serial.print(F("\r\nLeftYaw"));
+      // Increase the counter clockwise rotors by yawAmount
+      // and decrease the clockwise rotors by yawAmount
+      motor1Speed += yawAmount;
+      motor2Speed += yawAmount;
+      
+      motor3Speed -= yawAmount;
+      motor4Speed -= yawAmount;      
+    }
+    // Don't allow both L1 and R1 at the same time
+    else if (PS3.getAnalogButton(R1)) {
+      Serial.print(F("\r\nRightYaw"));
+      // Increase the clockwise rotors by yawAmount
+      // and decrease the ccw rotors by yawAmount
+      
+      motor3Speed += yawAmount;
+      motor4Speed += yawAmount;
 
+      motor1Speed -= yawAmount;
+      motor2Speed -= yawAmount;
+    }
+
+    if (PS3.getButtonClick(TRIANGLE)) {
+        // Should kill the motors
         motor1Speed = 1120;
         motor2Speed = 1120;
         motor3Speed = 1120;
         motor4Speed = 1120;
-        writeMotorSpeed();
+        //writeMotorSpeed();
     }
     
     if (PS3.getButtonClick(PS)) {
@@ -121,21 +147,17 @@ void loop() {
 
     if (PS3.getButtonClick(UP)) {
       motor1Speed += 5;
-      writeMotorSpeed();
     }
 
     if (PS3.getButtonClick(DOWN)) {
       motor2Speed += 5;
-      writeMotorSpeed();
     }
 
     if (PS3.getButtonClick(LEFT)) {
       motor3Speed += 5;
-      writeMotorSpeed();
     }
     if (PS3.getButtonClick(RIGHT)) {
       motor4Speed += 5;
-      writeMotorSpeed();
     }
     
   }
