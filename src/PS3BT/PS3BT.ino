@@ -41,7 +41,7 @@ void setup() {
 
   // Specify which pins the motors are attached to
   motor.attach(5);
-  motor2.attach(7);
+  motor2.attach(9);
   motor3.attach(6);
   motor4.attach(3);
 
