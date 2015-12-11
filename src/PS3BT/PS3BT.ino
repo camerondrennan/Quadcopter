@@ -41,7 +41,7 @@ void setup() {
 
   // Specify which pins the motors are attached to
   motor.attach(5);
-  motor2.attach(9);
+  motor2.attach(7);
   motor3.attach(6);
   motor4.attach(3);
 
@@ -79,7 +79,6 @@ void loop() {
 
   // Update the motor speed to the last value set
   writeMotorSpeed();
-
     
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
     
@@ -145,10 +144,11 @@ void loop() {
     // Stop the motors
     if (PS3.getButtonClick(START)) {
         // Should kill the motors
-        motor1Speed = 1120;
-        motor2Speed = 1120;
-        motor3Speed = 1120;
-        motor4Speed = 1120;
+          motor1Speed = 1120;
+          motor2Speed = 1120;
+          motor3Speed = 1120;
+          motor4Speed = 1120;
+        
         
     }
 
@@ -189,9 +189,11 @@ void loop() {
   }
   else {
     // Fail safe if the controller disconnects?
-    motor1Speed = 1120;
-    motor2Speed = 1120;
-    motor3Speed = 1120;
-    motor4Speed = 1120;
+    if(motor1Speed > 1120 && motor2Speed > 1120 && motor3Speed > 1120 && motor4Speed > 1120) { 
+      motor1Speed -= 5;
+      motor2Speed -= 5;
+      motor3Speed -= 5;
+      motor4Speed -= 5;
+    }
   }
 }

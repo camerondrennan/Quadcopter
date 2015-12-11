@@ -14,7 +14,7 @@ void setup() {
   Serial.println("This program will calibrate the ESC.");
 
   motor.attach(5);
-  motor2.attach(9);
+  motor2.attach(7);
   motor3.attach(6);
   motor4.attach(3);
 
