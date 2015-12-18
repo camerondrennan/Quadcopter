@@ -1,36 +1,214 @@
-// MPU-6050 Short Example Sketch
-// By Arduino User JohnChi
-// August 17, 2014
-// Public Domain
-#include<Wire.h>
-const int MPU_addr=0x68;  // I2C address of the MPU-6050
-int16_t AcX,AcY,AcZ,Tmp,GyX,GyY,GyZ;
+/*
+ * Written by Edvinas Kilbauskas, 2014
+ * You can contact me. Email: EdvinasKilbauskas@gmail.com
+ * Github: http://github.com/EdvinasKilbauskas
+ */
+
+#include <Wire.h>
+#include "MPUSensor.h"
+#include <Servo.h>
+#include "PID_v1.h"
+
+#define EDVCOPTER_DEBUG  // use this, if you want to connect quadcopter to my logging software
+
+#define ESC_A 5 //b
+#define ESC_D 6 //w
+#define ESC_B 3 //blk
+#define ESC_C 9 //y
+
+
+
+#define ESC_MIN 10
+#define ESC_MAX 180
+#define PITCH_P 0.101f
+#define PITCH_I 0.040f
+#define PITCH_D 0.108f 
+#define PITCH_MAX_MOTOR_BALANCE_SPEED 30              // max amount of thrust that will be applied to balance this axis
+#define PITCH_PID_OUTPUT 30
+#define PITCH_ERROR_CORRECTION -0.010
+
+
+
+#define ROLL_P 0.101f
+#define ROLL_I 0.040f
+#define ROLL_D 0.108f
+#define ROLL_MAX_MOTOR_BALANCE_SPEED 30                  // max amount of thrust that will be applied to balance this axis
+#define ROLL_PID_OUTPUT 30
+#define ROLL_ERROR_CORRECTION 0
+
+#define YAW_P 0.3f
+#define YAW_I 0.04f
+#define YAW_D 0.308f
+#define YAW_PID_OUTPUT 20
+#define YAW_MAX_MOTOR_BALANCE_SPEED 30                   // max amount of thrust that will be applied to balance this axis
+#define YAW_ERROR_CORRECTION 0.0248f 
+
+#define HOVER_MOTOR_SPEED 10
+
+#define ESC_ARM_TIME 2000                                // in milliseconds, this requires so much time because I also need to wait for sensor values to normalize.
+#define SENSOR_NORMALIZE_TIME 1000*20
+
+
+double pitchSp, rollSp, yawSp = 0;                       // setpoints
+bool yawSpSet = false;
+double P,I,D;                                            // PID values 
+float velocity;                                          // global velocity
+double bal_ac = 0, bal_bd, bal_axes = 0;                 // motor balances can vary between -100 & 100, motor balance between axes -100:ac , +100:bd
+float deltaTime = 0;
+
+double va, vb, vc, vd, v_ac, v_bd = 0;                   // velocities
+double pitch, roll, yaw  = 0.0;                          // angles in degrees
+
+Servo a,b,c,d;                                           // motors
+
+PID pitchReg(&pitch, &bal_bd, &pitchSp, PITCH_P, PITCH_I, PITCH_D, DIRECT);
+PID rollReg(&roll, &bal_ac, &rollSp, ROLL_P, ROLL_I, ROLL_D, DIRECT);
+PID yawReg(&yaw, &bal_axes, &yawSp, YAW_P, YAW_I, YAW_D, DIRECT);
+
+float sentTime = 0;
+
+MPUSensor sensor;
+
 void setup(){
-  Wire.begin();
-  Wire.beginTransmission(MPU_addr);
-  Wire.write(0x6B);  // PWR_MGMT_1 register
-  Wire.write(0);     // set to zero (wakes up the MPU-6050)
-  Wire.endTransmission(true);
-  Serial.begin(9600);
+
+
+  sensor.init();
+
+#ifndef EDVCOPTER_DEBUG
+  delay(SENSOR_NORMALIZE_TIME);
+#endif
+
+  initPIDs();
+  initESCs();
+  armESCs();
+
+#ifdef EDVCOPTER_DEBUG                        // Device tests go here
+  Serial.begin(115200);                 // Serial only necessary if in DEBUG mode
+#endif
+
 }
-void loop(){
-  Wire.beginTransmission(MPU_addr);
-  Wire.write(0x3B);  // starting with register 0x3B (ACCEL_XOUT_H)
-  Wire.endTransmission(false);
-  Wire.requestFrom(MPU_addr,14,true);  // request a total of 14 registers
-  AcX=Wire.read()<<8|Wire.read();  // 0x3B (ACCEL_XOUT_H) & 0x3C (ACCEL_XOUT_L)     
-  AcY=Wire.read()<<8|Wire.read();  // 0x3D (ACCEL_YOUT_H) & 0x3E (ACCEL_YOUT_L)
-  AcZ=Wire.read()<<8|Wire.read();  // 0x3F (ACCEL_ZOUT_H) & 0x40 (ACCEL_ZOUT_L)
-  Tmp=Wire.read()<<8|Wire.read();  // 0x41 (TEMP_OUT_H) & 0x42 (TEMP_OUT_L)
-  GyX=Wire.read()<<8|Wire.read();  // 0x43 (GYRO_XOUT_H) & 0x44 (GYRO_XOUT_L)
-  GyY=Wire.read()<<8|Wire.read();  // 0x45 (GYRO_YOUT_H) & 0x46 (GYRO_YOUT_L)
-  GyZ=Wire.read()<<8|Wire.read();  // 0x47 (GYRO_ZOUT_H) & 0x48 (GYRO_ZOUT_L)
-  Serial.print("AcX = "); Serial.print(AcX);
-  Serial.print(" | AcY = "); Serial.print(AcY);
-  Serial.print(" | AcZ = "); Serial.print(AcZ);
-  Serial.print(" | Tmp = "); Serial.print(Tmp/340.00+36.53);  //equation for temperature in degrees C from datasheet
-  Serial.print(" | GyX = "); Serial.print(GyX);
-  Serial.print(" | GyY = "); Serial.print(GyY);
-  Serial.print(" | GyZ = "); Serial.println(GyZ);
-  delay(333);
+
+void loop(){   
+
+  setSetPoint();
+  computeRotation();
+  computeVelocities();
+  updateMotors();
+
+  
+  if(sensor.isReady())
+    sensor.calculate();
 }
+
+void setSetPoint(){
+  rollSp = 0;
+  pitchSp = 0;
+}
+
+
+void computeRotation()
+{
+  pitch = ((sensor.getPitch()+PITCH_ERROR_CORRECTION)*(180/M_PI)); // Get value from sensor, correct it, and convert from radians to degrees
+  roll = ((sensor.getRoll()+ROLL_ERROR_CORRECTION)*(180/M_PI));    // Same thing here
+  yaw = ((sensor.getYaw()+ROLL_ERROR_CORRECTION)*(180/M_PI));
+
+//   Serial.print("rotation: ");
+//  Serial.print(pitch);Serial.print(" ");
+//  Serial.print(roll);Serial.print(" ");
+//  Serial.print(yaw);Serial.print(" ");
+
+  
+  //if(abs(pitch) <= 1.5f) pitch = 0;
+  //if(abs(roll) <= 1.5f) roll = 0;
+}
+
+void computeVelocities()
+{
+
+  velocity = 50.0;
+
+  
+  if(pitchReg.Compute()){
+    
+    bal_bd /= PITCH_PID_OUTPUT;
+    
+    vd = velocity+(bal_bd*PITCH_MAX_MOTOR_BALANCE_SPEED);
+    vb = velocity-(bal_bd*PITCH_MAX_MOTOR_BALANCE_SPEED);
+   Serial.print(" Pitch: ");
+    Serial.print(coef(vd));Serial.print(" "); Serial.print(coef(vb));Serial.print(" ");
+     
+  }
+
+  if(rollReg.Compute()){
+   
+    bal_ac /= ROLL_PID_OUTPUT;
+
+   
+    va = velocity+(bal_ac*ROLL_MAX_MOTOR_BALANCE_SPEED);
+    vc = velocity-(bal_ac*ROLL_MAX_MOTOR_BALANCE_SPEED);
+   Serial.print(" Roll: ");
+     Serial.print(coef(va));Serial.print(" "); Serial.print(coef(vc));Serial.print(" ");
+    Serial.println(" ");
+  }
+
+  if(yawReg.Compute()){
+   
+    bal_axes /= YAW_PID_OUTPUT;
+    va -= bal_axes*YAW_MAX_MOTOR_BALANCE_SPEED;
+    vc -= bal_axes*YAW_MAX_MOTOR_BALANCE_SPEED;
+
+    vb += bal_axes*YAW_MAX_MOTOR_BALANCE_SPEED;
+    vd += bal_axes*YAW_MAX_MOTOR_BALANCE_SPEED;
+     
+  }
+
+   
+}
+
+void updateMotors(){
+  a.writeMicroseconds(coef(va));
+  c.writeMicroseconds(coef(vc));
+  b.writeMicroseconds(coef(vb));
+  d.writeMicroseconds(coef(vd));
+}
+
+void initESCs(){
+  // attach ESCs to servos
+  a.attach(ESC_A);
+  b.attach(ESC_B);
+  c.attach(ESC_C);
+  d.attach(ESC_D);
+}
+
+void armESCs(){
+  va = vb = vc = vd = ESC_MIN;
+  updateMotors();
+  delay(ESC_ARM_TIME);
+}
+
+int coef(int val){
+  int coef = 1000/180;
+  int v = (val * coef)+1000;
+  return v;
+}
+
+void initPIDs(){
+  pitchReg.SetMode(AUTOMATIC);
+  pitchReg.SetOutputLimits(-PITCH_PID_OUTPUT, PITCH_PID_OUTPUT);
+  pitchReg.SetSampleTime(14);
+
+  rollReg.SetMode(AUTOMATIC);
+  rollReg.SetOutputLimits(-ROLL_PID_OUTPUT, ROLL_PID_OUTPUT);
+  rollReg.SetSampleTime(14);
+
+  yawReg.SetMode(AUTOMATIC);
+  yawReg.SetOutputLimits(-YAW_PID_OUTPUT, YAW_PID_OUTPUT);
+  yawReg.SetSampleTime(14);
+}
+
+
+
+
+
+
+
