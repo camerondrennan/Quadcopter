@@ -66,8 +66,8 @@ double pitch, roll, yaw  = 0.0;                          // angles in degrees
 
 USB Usb;
 BTD Btd(&Usb);
-PS3BT PS3(&Btd);
-
+//PS3BT PS3(&Btd);
+PS3BT PS3(&Btd, 0x00, 0x15, 0x83, 0x3D, 0x0A, 0x57);
 
 Servo a, b, c, d;                                        // motors
 
@@ -84,9 +84,6 @@ MPUSensor sensor;
 
 void setup() {
   Serial.begin(9600);
-#if !defined(__MIPSEL__)
-  while (!Serial); // Wait for serial port to connect - used on Leonardo, Teensy and other boards with built-in USB CDC serial connection
-#endif
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
@@ -94,9 +91,13 @@ void setup() {
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
 
 
-  sensor.init();
+ // sensor.init();
+
+
   initPIDs();
+//  Serial.print("whet");
   initESCs();
+//  Serial.print("whet");
   armESCs();
 
 
@@ -106,44 +107,40 @@ void setup() {
 
 
 void loop() {
+  
+
+
+ 
+
   Usb.Task();
-
-
-  setSetPoint();
-  computeRotation();
-  computeVelocities();
-  updateMotors();
-  sensor.calculate();
-
-
 
 
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
 
 
     if (PS3.getButtonClick(CROSS)) {
-      ROLL_P = ROLL_P - 0.010;
+      ROLL_P = ROLL_P - 0.005;
       Serial.print("Roll P is decreased too ");
       Serial.print(ROLL_P,3);
       Serial.print("\n");
     }
 
     if (PS3.getButtonClick(TRIANGLE)) {
-      ROLL_P = ROLL_P + 0.010;
+      ROLL_P = ROLL_P + 0.005;
       Serial.print("Roll P is increased too ");
       Serial.print(ROLL_P,3);
       Serial.print("\n");
     }
 
     if (PS3.getButtonClick(SQUARE)) {
-      ROLL_I = ROLL_I - 0.010;
+      ROLL_I = ROLL_I - 0.005;
       Serial.print("Roll I is decreased too ");
       Serial.print(ROLL_I,3);
          Serial.print("\n");
     }
 
     if (PS3.getButtonClick(CIRCLE)) {
-      ROLL_I = ROLL_I + 0.010;
+      ROLL_I = ROLL_I + 0.005;
       Serial.print("Roll I is increased too ");
       Serial.print(ROLL_I,3);
          Serial.print("\n");
@@ -234,7 +231,7 @@ void loop() {
 
     // Roll left
     if (PS3.getButtonClick(LEFT)) {
-       ROLL_D = ROLL_D - 0.010;
+       ROLL_D = ROLL_D - 0.005;
       Serial.print("Roll D is decreased too ");
       Serial.print(ROLL_D,3);
       Serial.print("\n");
@@ -244,7 +241,7 @@ void loop() {
 
     // Roll right
     if (PS3.getButtonClick(RIGHT)) {
-       ROLL_D = ROLL_D + 0.010;
+       ROLL_D = ROLL_D + 0.005;
       Serial.print("Roll D is increased too ");
       Serial.print(ROLL_D,3);
       Serial.print("\n");
@@ -253,9 +250,13 @@ void loop() {
     }
 
   }
-  else {
- 
-  }
+
+  
+   setSetPoint();
+  computeRotation();
+  computeVelocities();
+  updateMotors();
+//  sensor.calculate();
 }
 
 void setSetPoint() {
