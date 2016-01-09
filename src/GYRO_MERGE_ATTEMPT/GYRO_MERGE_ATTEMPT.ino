@@ -84,6 +84,8 @@ MPUSensor sensor;
 
 void setup() {
   Serial.begin(9600);
+  
+  
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
@@ -91,13 +93,13 @@ void setup() {
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
 
 
- // sensor.init();
 
-
+sensor.init();
+Serial.print("whet");
   initPIDs();
-//  Serial.print("whet");
+  Serial.print("whet");
   initESCs();
-//  Serial.print("whet");
+  Serial.print("whet");
   armESCs();
 
 
@@ -256,7 +258,7 @@ void loop() {
   computeRotation();
   computeVelocities();
   updateMotors();
-//  sensor.calculate();
+  sensor.calculate();
 }
 
 void setSetPoint() {
@@ -271,11 +273,11 @@ void computeRotation()
   roll = ((sensor.getRoll() + ROLL_ERROR_CORRECTION) * (180 / M_PI)); // Same thing here
   yaw = ((sensor.getYaw() + YAW_ERROR_CORRECTION) * (180 / M_PI));
 
-  //   Serial.print("rotation: ");
-  //  Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
-  //  Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
-  //  Serial.print(sensor.getYaw()+ YAW_ERROR_CORRECTION);Serial.print(" ");
-  //   Serial.println(" ");
+     Serial.print("rotation: ");
+    Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
+    Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
+    Serial.print(sensor.getYaw()+ YAW_ERROR_CORRECTION);Serial.print(" ");
+    Serial.println(" ");
 
 
   //if(abs(pitch) <= 1.5f) pitch = 0;
@@ -285,7 +287,7 @@ void computeRotation()
 void computeVelocities()
 {
 
-  velocity = 60.0;
+  velocity = 20.0;
 
 
   if (pitchReg.Compute()) {
