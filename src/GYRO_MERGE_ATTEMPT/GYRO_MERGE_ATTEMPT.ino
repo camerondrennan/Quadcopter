@@ -56,7 +56,7 @@ int ROLL_MAX_MOTOR_BALANCE_SPEED = 30;                  // max amount of thrust 
 double pitchSp, rollSp, yawSp = 0;                       // setpoints
 bool yawSpSet = false;
 double P, I, D;                                          // PID values
-float velocity;                                          // global velocity
+float velocity = 20.0;                                          // global velocity
 double bal_ac = 0, bal_bd, bal_axes = 0;                 // motor balances can vary between -100 & 100, motor balance between axes -100:ac , +100:bd
 float deltaTime = 0;
 
@@ -66,8 +66,8 @@ double pitch, roll, yaw  = 0.0;                          // angles in degrees
 
 USB Usb;
 BTD Btd(&Usb);
-//PS3BT PS3(&Btd);
-PS3BT PS3(&Btd, 0x00, 0x15, 0x83, 0x3D, 0x0A, 0x57);
+PS3BT PS3(&Btd);
+//PS3BT PS3(&Btd, 0x00, 0x15, 0x83, 0x3D, 0x0A, 0x57);
 
 Servo a, b, c, d;                                        // motors
 
@@ -83,7 +83,7 @@ MPUSensor sensor;
 
 
 void setup() {
-  Serial.begin(9600);
+  Serial.begin(115200);
   
   
   if (Usb.Init() == -1) {
@@ -92,112 +92,61 @@ void setup() {
   }
   Serial.print(F("\r\nPS3 Bluetooth Library Started"));
 
-
-
-sensor.init();
-Serial.print("whet");
+  sensor.init();
   initPIDs();
-  Serial.print("whet");
   initESCs();
-  Serial.print("whet");
   armESCs();
-
 
 }
 
-
-
-
 void loop() {
   
-
-
- 
-
   Usb.Task();
-
 
   if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
 
 
     if (PS3.getButtonClick(CROSS)) {
       ROLL_P = ROLL_P - 0.005;
-      Serial.print("Roll P is decreased too ");
-      Serial.print(ROLL_P,3);
-      Serial.print("\n");
     }
 
     if (PS3.getButtonClick(TRIANGLE)) {
       ROLL_P = ROLL_P + 0.005;
-      Serial.print("Roll P is increased too ");
-      Serial.print(ROLL_P,3);
-      Serial.print("\n");
     }
 
     if (PS3.getButtonClick(SQUARE)) {
       ROLL_I = ROLL_I - 0.005;
-      Serial.print("Roll I is decreased too ");
-      Serial.print(ROLL_I,3);
-         Serial.print("\n");
     }
 
     if (PS3.getButtonClick(CIRCLE)) {
       ROLL_I = ROLL_I + 0.005;
-      Serial.print("Roll I is increased too ");
-      Serial.print(ROLL_I,3);
-         Serial.print("\n");
     }
 
-    // Increase throttle
+    
     if (PS3.getAnalogButton(R2)) {
-      
-     
-      //writeMotorSpeed();
+      velocity += 0.005;
     }
 
-    // Decrease throttle
+    
     if (PS3.getAnalogButton(L2)) {
-     
+     velocity -= 0.005;
     }
-
-
-
-    int yawAmount = 2;
+    
     // Left yaw
     if (PS3.getAnalogButton(L1)) {
       Serial.print(F("\r\nLeftYaw"));
 
-      // Increase the counter clockwise rotors by yawAmount
-      // and decrease the clockwise rotors by yawAmount
-//      motor1Speed += yawAmount;
-//      motor2Speed += yawAmount;
-//
-//      motor3Speed -= yawAmount;
-//      motor4Speed -= yawAmount;
     }
     // Right yaw
     // Don't allow both L1 and R1 at the same time
     else if (PS3.getAnalogButton(R1)) {
       Serial.print(F("\r\nRightYaw"));
 
-      // Increase the clockwise rotors by yawAmount
-      // and decrease the ccw rotors by yawAmount
 
-//      motor3Speed += yawAmount;
-//      motor4Speed += yawAmount;
-//
-//      motor1Speed -= yawAmount;
-//      motor2Speed -= yawAmount;
     }
 
     // Stop the motors
     if (PS3.getButtonClick(START)) {
-      // Should kill the motors
-//      motor1Speed = 1120;
-//      motor2Speed = 1120;
-//      motor3Speed = 1120;
-//      motor4Speed = 1120;
-
 
     }
 
@@ -215,9 +164,7 @@ void loop() {
         Serial.print("Balance Speed Increase ");
         Serial.print(ROLL_MAX_MOTOR_BALANCE_SPEED);
         Serial.print("\n");
-    
-//      motor1Speed -= pitchRollAmount;
-//      motor2Speed += pitchRollAmount;
+
     }
 
     // Pitch backwards
@@ -227,38 +174,38 @@ void loop() {
         Serial.print(ROLL_MAX_MOTOR_BALANCE_SPEED);
         Serial.print("\n");
       // TODO: Add min max checks
-//      motor1Speed += pitchRollAmount;
-//      motor2Speed -= pitchRollAmount;
+
     }
 
     // Roll left
     if (PS3.getButtonClick(LEFT)) {
        ROLL_D = ROLL_D - 0.005;
-      Serial.print("Roll D is decreased too ");
-      Serial.print(ROLL_D,3);
-      Serial.print("\n");
-//      motor3Speed -= pitchRollAmount;
-//      motor4Speed += pitchRollAmount;
     }
 
     // Roll right
     if (PS3.getButtonClick(RIGHT)) {
        ROLL_D = ROLL_D + 0.005;
-      Serial.print("Roll D is increased too ");
-      Serial.print(ROLL_D,3);
-      Serial.print("\n");
-//      motor3Speed += pitchRollAmount;
-//      motor4Speed -= pitchRollAmount;
     }
-
+     Serial.print("#");
   }
 
-  
-   setSetPoint();
+   Serial.print(("Roll P: "));
+   Serial.print(ROLL_P);
+   Serial.print((" I: "));
+   Serial.print(ROLL_I);
+   Serial.print((" D: "));
+   Serial.print(ROLL_D);
+   Serial.print(("; "));
+
+   Serial.print(("Velocity is "));
+   Serial.print(velocity);
+   Serial.println((" "));
+
+  setSetPoint();
   computeRotation();
   computeVelocities();
   updateMotors();
-  sensor.calculate();
+  sensor.calculate(); 
 }
 
 void setSetPoint() {
@@ -273,11 +220,11 @@ void computeRotation()
   roll = ((sensor.getRoll() + ROLL_ERROR_CORRECTION) * (180 / M_PI)); // Same thing here
   yaw = ((sensor.getYaw() + YAW_ERROR_CORRECTION) * (180 / M_PI));
 
-     Serial.print("rotation: ");
-    Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
-    Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
-    Serial.print(sensor.getYaw()+ YAW_ERROR_CORRECTION);Serial.print(" ");
-    Serial.println(" ");
+//     Serial.print("rotation: ");
+//    Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.print(sensor.getYaw()+ YAW_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.println(" ");
 
 
   //if(abs(pitch) <= 1.5f) pitch = 0;
@@ -287,7 +234,7 @@ void computeRotation()
 void computeVelocities()
 {
 
-  velocity = 20.0;
+  //velocity = 20.0;
 
 
   if (pitchReg.Compute()) {
