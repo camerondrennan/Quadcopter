@@ -49,8 +49,13 @@ boolean start = false;
 double pitchSp, rollSp, yawSp = 0;                       // setpoints
 bool yawSpSet = false;
 double P, I, D;                                          // PID values
+<<<<<<< HEAD
 float velocity = 0.0;                                          // global velocity
 double bal_ac, bal_bd, bal_axes = 0;                 // motor balances can vary between -100 & 100, motor balance between axes -100:ac , +100:bd
+=======
+float velocity = 20.0;                                          // global velocity
+double bal_ac = 0, bal_bd, bal_axes = 0;                 // motor balances can vary between -100 & 100, motor balance between axes -100:ac , +100:bd
+>>>>>>> origin/master
 float deltaTime = 0;
 
 double va, vb, vc, vd, v_ac, v_bd = 0;                   // velocities
@@ -73,7 +78,12 @@ MPUSensor sensor;
 
 void setup() {
   Serial.begin(115200);
+<<<<<<< HEAD
 
+=======
+  
+  
+>>>>>>> origin/master
   if (Usb.Init() == -1) {
     Serial.print(F("\r\nOSC did not start"));
     while (1); //halt
@@ -88,6 +98,7 @@ void setup() {
 }
 
 void loop() {
+<<<<<<< HEAD
 
   Usb.Task();
 
@@ -103,11 +114,18 @@ void loop() {
 
     } else {
       tiltPitch = tiltRoll = 0;
+=======
+  
+  Usb.Task();
+
+  if (PS3.PS3Connected || PS3.PS3NavigationConnected) {
+>>>>>>> origin/master
 
 
     }
 
     if (PS3.getButtonClick(CROSS)) {
+<<<<<<< HEAD
       ROLL_P = ROLL_P - 0.01f;
       PITCH_P = PITCH_P - 0.01f;
 //        YAW_P = YAW_P - 0.01f;
@@ -156,21 +174,55 @@ void loop() {
       velocity -= 1;
     }
 
+=======
+      ROLL_P = ROLL_P - 0.005;
+    }
+
+    if (PS3.getButtonClick(TRIANGLE)) {
+      ROLL_P = ROLL_P + 0.005;
+    }
+
+    if (PS3.getButtonClick(SQUARE)) {
+      ROLL_I = ROLL_I - 0.005;
+    }
+
+    if (PS3.getButtonClick(CIRCLE)) {
+      ROLL_I = ROLL_I + 0.005;
+    }
+
+    
+    if (PS3.getAnalogButton(R2)) {
+      velocity += 0.005;
+    }
+
+    
+    if (PS3.getAnalogButton(L2)) {
+     velocity -= 0.005;
+    }
+    
+>>>>>>> origin/master
     // Left yaw
     if (PS3.getAnalogButton(L1)) {
 
     }
     // Right yaw
 
+<<<<<<< HEAD
     else if (PS3.getAnalogButton(R1)) {
+=======
+>>>>>>> origin/master
 
     }
 
     // Stop the motors
     if (PS3.getButtonClick(START)) {
+<<<<<<< HEAD
       if (start == false) {
         start = true;
       } else start = false;
+=======
+
+>>>>>>> origin/master
     }
 
     // Disconnect the controller
@@ -180,26 +232,42 @@ void loop() {
     }
 
     if (PS3.getButtonClick(UP)) {
+<<<<<<< HEAD
 
       //       PITCH_MAX_MOTOR_BALANCE_SPEED += 10;
       //       ROLL_MAX_MOTOR_BALANCE_SPEED += 10;
       ROLL_PID_OUTPUT += 1;
       PITCH_PID_OUTPUT += 1;
 //      YAW_PID_OUTPUT +=1;
+=======
+       ROLL_MAX_MOTOR_BALANCE_SPEED = ROLL_MAX_MOTOR_BALANCE_SPEED + 5;
+        Serial.print("Balance Speed Increase ");
+        Serial.print(ROLL_MAX_MOTOR_BALANCE_SPEED);
+        Serial.print("\n");
+>>>>>>> origin/master
 
     }
 
     if (PS3.getButtonClick(DOWN)) {
+<<<<<<< HEAD
       //       PITCH_MAX_MOTOR_BALANCE_SPEED -= 10;
       //       ROLL_MAX_MOTOR_BALANCE_SPEED -= 10;
 
       ROLL_PID_OUTPUT -= 1;
       PITCH_PID_OUTPUT -= 1;
 //        YAW_PID_OUTPUT -=1;
+=======
+      ROLL_MAX_MOTOR_BALANCE_SPEED = ROLL_MAX_MOTOR_BALANCE_SPEED - 5;
+        Serial.print("Balance Speed Decrease ");
+        Serial.print(ROLL_MAX_MOTOR_BALANCE_SPEED);
+        Serial.print("\n");
+      // TODO: Add min max checks
+>>>>>>> origin/master
 
     }
 
     if (PS3.getButtonClick(LEFT)) {
+<<<<<<< HEAD
       ROLL_D = ROLL_D - 0.01;
       PITCH_D = PITCH_D - 0.01;
 //      YAW_D = YAW_D - 0.01;
@@ -208,10 +276,14 @@ void loop() {
       pitchReg.SetTunings(ROLL_P, ROLL_I, ROLL_D);
       yawReg.SetTunings(YAW_P, YAW_I, YAW_D);
 
+=======
+       ROLL_D = ROLL_D - 0.005;
+>>>>>>> origin/master
     }
 
     // Roll right
     if (PS3.getButtonClick(RIGHT)) {
+<<<<<<< HEAD
       ROLL_D = ROLL_D + 0.01;
       PITCH_D = PITCH_D + 0.01;
       
@@ -273,6 +345,30 @@ void loop() {
   if (YAW_P < 0) YAW_P = 0;
   if (YAW_I < 0) YAW_I = 0;
   if (YAW_D < 0) YAW_D = 0;
+=======
+       ROLL_D = ROLL_D + 0.005;
+    }
+     Serial.print("#");
+  }
+
+   Serial.print(("Roll P: "));
+   Serial.print(ROLL_P);
+   Serial.print((" I: "));
+   Serial.print(ROLL_I);
+   Serial.print((" D: "));
+   Serial.print(ROLL_D);
+   Serial.print(("; "));
+
+   Serial.print(("Velocity is "));
+   Serial.print(velocity);
+   Serial.println((" "));
+
+  setSetPoint();
+  computeRotation();
+  computeVelocities();
+  updateMotors();
+  sensor.calculate(); 
+>>>>>>> origin/master
 }
 
 void setSetPoint() {
@@ -287,6 +383,7 @@ void computeRotation()
   roll = ((sensor.getRoll() + ROLL_ERROR_CORRECTION) * (180 / M_PI)); // Same thing here
   yaw = ((sensor.getYaw() + YAW_ERROR_CORRECTION) * (180 / M_PI));
 
+<<<<<<< HEAD
       Serial.print("Rotation: ");
       Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
       Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
@@ -299,6 +396,14 @@ void computeRotation()
 //  Serial.print(" ");
 //  Serial.print(yaw);
 //  Serial.print(" ");
+=======
+//     Serial.print("rotation: ");
+//    Serial.print(sensor.getPitch()+ PITCH_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.print(sensor.getRoll()+ ROLL_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.print(sensor.getYaw()+ YAW_ERROR_CORRECTION);Serial.print(" ");
+//    Serial.println(" ");
+
+>>>>>>> origin/master
 
   //if(abs(pitch) <= 1.5f) pitch = 0;
   //if(abs(roll) <= 1.5f) roll = 0;
@@ -307,6 +412,12 @@ void computeRotation()
 void computeVelocities()
 {
 
+<<<<<<< HEAD
+=======
+  //velocity = 20.0;
+
+
+>>>>>>> origin/master
   if (pitchReg.Compute()) {
 
     bal_bd /= PITCH_PID_OUTPUT;
@@ -411,6 +522,10 @@ void initPIDs() {
   yawReg.SetOutputLimits(-YAW_PID_OUTPUT, YAW_PID_OUTPUT);
   yawReg.SetSampleTime(14);
 }
+<<<<<<< HEAD
 
 
 
+=======
+
+>>>>>>> origin/master
