@@ -1,4 +1,4 @@
-# Quadcopter
+# Quadcopter - The Millennium Pigeon
 ## CS413 Embedded Systems: Group 14
 
 This project is part of the Computer Science course CS413 at The University of Strathlclyde
