@@ -11,7 +11,7 @@
 #include <SPI.h>
 #endif
 
-#define EDVCOPTER_DEBUG  // use this, if you want to connect quadcopter to my logging software
+#define EDVCOPTER_DEBUG 
 #define ESC_MIN 10;
 #define ESC_A 5 //b
 #define ESC_D 6 //w
@@ -411,5 +411,4 @@ void initPIDs() {
   yawReg.SetOutputLimits(-YAW_PID_OUTPUT, YAW_PID_OUTPUT);
   yawReg.SetSampleTime(14);
 }
-
 
